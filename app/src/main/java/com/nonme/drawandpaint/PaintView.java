@@ -15,15 +15,17 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
+
 
 public class PaintView extends View {
     private static final String TAG = "PaintView";
     @ColorLong private int mCurrentColor;
-    private Path strokePath;
     private Paint mPaint;
     private Paint mBackgroundPaint;
+    private Action mCurrentTool;
+    private ActionLab mActionLab;
 
     public PaintView(Context context) {
         this(context, null);
@@ -42,7 +44,7 @@ public class PaintView extends View {
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(ContextCompat.getColor(getContext(), R.color.white));
 
-        strokePath = new Path();
+        mActionLab = ActionLab.get();
     }
 
     @Override
@@ -54,19 +56,54 @@ public class PaintView extends View {
         PointF current = new PointF(event.getX(), event.getY());
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                strokePath.moveTo(current.x, current.y);
+                mCurrentTool = new Brush(mCurrentColor);
+                mActionLab.addAction(mCurrentTool);
+                actionDown(current);
+                Log.i(TAG, "ACTION DOWN");
                 break;
             case MotionEvent.ACTION_MOVE:
-                strokePath.lineTo(current.x, current.y);
+                actionMove(current);
+                Log.i(TAG, "ACTION MOVE");
                 invalidate();
+                break;
+            case MotionEvent.ACTION_UP:
+                Log.i(TAG, "ACTION UP");
+                if(((Brush)mCurrentTool).isEmtpy())
+                    mActionLab.undoAction();
                 break;
         }
         return true;
+    }
+    private void actionMove(PointF current) {
+        if(mCurrentTool.getClass() == Brush.class) {
+            Brush brush = (Brush) mCurrentTool;
+            brush.draw(current.x, current.y);
+        }
+    }
+    private void actionDown(PointF current) {
+        if(mCurrentTool.getClass() == Brush.class) {
+            Brush brush = (Brush) mCurrentTool;
+            brush.moveTo(current.x, current.y);
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawPaint(mBackgroundPaint);
-        canvas.drawPath(strokePath, mPaint);
+        List<Action> drawList = mActionLab.getDrawables();
+        for(ListIterator<Action> l = drawList.listIterator(); l.hasNext(); ) {
+            if(l.nextIndex() > mActionLab.getCurrentAction())
+                break;
+            if(l.next().getClass() == Brush.class) {
+                mPaint.setColor(((Brush) l.previous()).getColor());
+                canvas.drawPath((Brush) l.next(), mPaint);
+            }
+        }
+    }
+    public void setCurrentTool(Action action) {
+        mCurrentTool = action;
+    }
+    public void setCurrentColor(int color) {
+        mCurrentColor = color;
     }
 }

@@ -20,4 +20,6 @@
     <color name="navy">#000080</color>
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
+    <color name="background_holo_light">#26f3f3f3</color>
+    <color name="gray_ui">#424242</color>
 </resources>

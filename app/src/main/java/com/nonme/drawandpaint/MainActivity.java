@@ -10,22 +10,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.main_activity);
 
         FragmentManager fm = getSupportFragmentManager();
-        Fragment paintingFragment = fm.findFragmentById(R.id.painting_fragment),
-                toolBarFragment = fm.findFragmentById(R.id.tool_bar_fragment);
-
+        Fragment paintingFragment = fm.findFragmentById(R.id.painting_fragment);
         if(paintingFragment == null) {
             paintingFragment = new PaintingFragment();
             fm.beginTransaction()
                     .add(R.id.painting_fragment, paintingFragment)
-                    .commit();
-        }
-        if(toolBarFragment == null) {
-            toolBarFragment = new ToolBarFragment();
-            fm.beginTransaction()
-                    .add(R.id.tool_bar_fragment, toolBarFragment)
                     .commit();
         }
     }
