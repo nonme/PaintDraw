@@ -1,4 +1,4 @@
-package com.nonme.drawandpaint;
+package com.nonme.actions;
 
 public interface Action {
     void redo();

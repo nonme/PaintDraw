@@ -1,7 +1,9 @@
-package com.nonme.drawandpaint;
+package com.nonme.actions;
 
 import android.graphics.Path;
 import android.graphics.PointF;
+
+import com.nonme.actions.Action;
 
 import java.util.ArrayList;
 
@@ -10,12 +12,9 @@ public class Brush extends Path implements Action {
     private int mColor;
     private PointF mOrigin;
     private ArrayList<PointF> mPoints;
-    public Brush() {
-        mBrushSize = 5;
+    public Brush(int color, int brushSize) {
+        mBrushSize = brushSize;
         mPoints = new ArrayList<PointF>();
-    }
-    public Brush(int color) {
-        this();
         mColor = color;
         this.setColor(color);
     }

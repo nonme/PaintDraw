@@ -3,6 +3,8 @@ package com.nonme.drawandpaint;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.nonme.actions.Action;
+
 public class ActionLab {
     private List<Action> mActions;
     private int mCurrentAction;

@@ -1,18 +1,25 @@
 package com.nonme.drawandpaint;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.Spinner;
+import android.support.v7.widget.AppCompatSpinner;
+import android.widget.ViewAnimator;
+
+
+import com.nonme.actions.Brush;
+import com.nonme.actions.Dropper;
+import com.nonme.fragments.NumberPickerFragment;
+import com.nonme.util.SameValueSelectedSpinner;
+import com.nonme.views.PaintView;
 
 public class PaintingFragment extends android.support.v4.app.Fragment {
     private ImageButton mBrushButton;
@@ -31,12 +38,17 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
     private ImageButton mSaveButton;
     private ImageButton mMaintenanceButton;
     private ImageButton mPaletteButton;
+    private ImageButton mBrushSizeButton;
 
-    private Spinner mPaletteSpinner;
-
+    private SameValueSelectedSpinner mPaletteSpinner;
     private ActionLab mActionLab;
-
     private PaintView mPaintView;
+    private View mSupportToolBar;
+    private ViewAnimator mViewAnimator;
+
+    private Integer[] mColors = new Integer[] {
+        R.color.red, R.color.yellow, R.color.green, R.color.blue,
+                R.color.purple, R.color.maroon, R.color.gray, R.color.black};
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,9 +58,10 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.painting_fragment, container, false);
+        mViewAnimator = v.findViewById(R.id.view_animator);
         setToolButtons(v);
         mPaintView = v.findViewById(R.id.painting_fragment);
-        mPaintView.setCurrentTool(new Brush());
+        mPaintView.setCurrentTool(PaintView.BRUSH);
         mActionLab = ActionLab.get();
         return v;
     }
@@ -63,10 +76,18 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         mBrushButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPaintView.setCurrentTool(new Brush());
+                mPaintView.setCurrentTool(PaintView.BRUSH);
+                mViewAnimator.setDisplayedChild(0);
             }
         });
         mDropperButton = setButton(R.id.dropper_button, size, v);
+        mDropperButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPaintView.setCurrentTool(PaintView.DROPPER);
+                mViewAnimator.setDisplayedChild(1);
+            }
+        });
         mEraserButton = setButton(R.id.eraser_button, size, v);
         mTextBoxButton = setButton(R.id.text_button, size, v);
         mShapeButton = setButton(R.id.shape_button, size, v);
@@ -86,27 +107,22 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
                 mPaintView.invalidate();
             }
         });
-        mPaletteSpinner = (Spinner) v.findViewById(R.id.palette_spinner);
-        ColorArrayAdapter adapter = new ColorArrayAdapter(getContext(),
-                new Integer[] {
-                        R.color.red, R.color.yellow, R.color.green, R.color.blue,
-                        R.color.purple, R.color.maroon, R.color.gray, R.color.black});
+        mSupportToolBar = (View) v.findViewById(R.id.support_tool_bar);
+        mPaletteSpinner = (SameValueSelectedSpinner) v.findViewById(R.id.palette_spinner);
+        ColorArrayAdapter adapter = new ColorArrayAdapter(getContext(), mColors);
         mPaletteSpinner.setAdapter(adapter);
+        mPaletteSpinner.setDropDownVerticalOffset(95);
+        mPaletteSpinner.setDropDownHorizontalOffset(50);
         mPaletteSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.i("PaintingFragment", "Item selected!");
                 if(PaintingFragment.this.mPaletteSpinner.getSelectedItem() != null) {
-                    Log.i("PaintingFragment", "Color is"
-                            + String.valueOf( (int) PaintingFragment.this.mPaletteSpinner.getSelectedItem()));
-                    mPaintView.setCurrentColor(
-                            (int) PaintingFragment.this.mPaletteSpinner.getSelectedItem());
+                    int itemPosition = PaintingFragment.this.mPaletteSpinner.getSelectedItemPosition();
+                    mPaintView.setCurrentColor(mColors[itemPosition]);
                 }
             }
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
+            public void onNothingSelected(AdapterView<?> parent) { }
         });
         mPaletteButton = setButton(R.id.palette_button, size, v);
         mPaletteButton.setOnClickListener(new View.OnClickListener() {
@@ -117,9 +133,28 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         });
         mSaveButton = setButton(R.id.save_button, size, v);
         mMaintenanceButton = setButton(R.id.maintenance_button, size, v);
+        mBrushButton = (ImageButton) v.findViewById(R.id.brush_size);
+        mBrushButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment numberFragment = new NumberPickerFragment();
+                numberFragment.show(PaintingFragment.this.getActivity().getSupportFragmentManager(),
+                        "missiles");
+            }
+        });
     }
     private ImageButton setButton(int layoutParam, int size, View v) {
         ImageButton newButton = (ImageButton) v.findViewById(layoutParam);
         return newButton;
+    }
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        if(dialog.getClass() == NumberPickerFragment.class) {
+            int value = ((NumberPickerFragment) dialog).getValue();
+            mPaintView.setBrushSize(value);
+            dialog.dismiss();
+        }
+    }
+    public void onDialogNegativeClick(DialogFragment dialog) {
+            dialog.dismiss();
     }
 }
