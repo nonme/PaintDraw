@@ -1,4 +1,4 @@
-package com.nonme.drawandpaint;
+package com.nonme.util;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -11,6 +11,8 @@ import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.nonme.drawandpaint.R;
 
 public class ColorArrayAdapter extends ArrayAdapter<Integer> {
     private Integer[] mColors;
@@ -28,7 +30,8 @@ public class ColorArrayAdapter extends ArrayAdapter<Integer> {
     }
     private View getImageForPosition(int position) {
         ImageView imageView = new ImageView(getContext());
-        imageView.setBackgroundResource(mColors[position]);
+        //imageView.setBackgroundResource(Color.color);
+        imageView.setImageResource(mColors[position]);
         imageView.setLayoutParams(new AbsListView.LayoutParams(
                 80, 80));
         return imageView;

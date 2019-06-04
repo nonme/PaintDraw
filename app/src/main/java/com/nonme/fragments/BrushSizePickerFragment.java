@@ -1,28 +1,22 @@
 package com.nonme.fragments;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
-import android.text.Layout;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.NumberPicker;
 
 import com.nonme.drawandpaint.R;
-import com.nonme.views.BrushSizeView;
+import com.nonme.views.SizeView;
 
-public class NumberPickerFragment extends DialogFragment {
+public class BrushSizePickerFragment extends DialogFragment {
     public interface NumberPickerDialogListener {
         public void onDialogPositiveClick(DialogFragment dialog);
         public void onDialogNegativeClick(DialogFragment dialog);
@@ -30,7 +24,7 @@ public class NumberPickerFragment extends DialogFragment {
     private NumberPickerDialogListener mListener;
 
     private NumberPicker mNumberPicker;
-    private BrushSizeView mBrushSizeView;
+    private SizeView mSizeView;
     private Button mPositiveButton;
     private Button mNegativeButton;
     private Context mContext;
@@ -53,23 +47,24 @@ public class NumberPickerFragment extends DialogFragment {
         mNumberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mBrushSizeView.setSize(5*picker.getValue());
+                mSizeView.setSize(5*picker.getValue());
                 mValue = 5*picker.getValue();
             }
         });
-        mBrushSizeView = (BrushSizeView) view.findViewById(R.id.brush_size_view);
+        mSizeView = (SizeView) view.findViewById(R.id.brush_size_view);
+        mSizeView.setItem(SizeView.CIRCLE);
         mPositiveButton = (Button) view.findViewById(R.id.ok_button);
         mPositiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onDialogPositiveClick(NumberPickerFragment.this);
+                mListener.onDialogPositiveClick(BrushSizePickerFragment.this);
             }
         });
         mNegativeButton = (Button) view.findViewById(R.id.cancel_button);
         mNegativeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onDialogNegativeClick(NumberPickerFragment.this);
+                mListener.onDialogNegativeClick(BrushSizePickerFragment.this);
             }
         });
         Dialog dialog = new Dialog(getContext());

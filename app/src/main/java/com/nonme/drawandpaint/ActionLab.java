@@ -43,4 +43,9 @@ public class ActionLab {
     public int getCurrentAction() {
         return mCurrentAction;
     }
+
+    public void clear() {
+        mActions.clear();
+        mCurrentAction = -1;
+    }
 }
