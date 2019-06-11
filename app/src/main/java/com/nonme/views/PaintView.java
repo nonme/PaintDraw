@@ -2,16 +2,21 @@ package com.nonme.views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PathEffect;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.support.annotation.ColorLong;
+import android.support.constraint.solver.widgets.Rectangle;
 import android.support.v4.content.ContextCompat;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -22,6 +27,8 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -30,7 +37,8 @@ import com.nonme.actions.Action;
 import com.nonme.actions.Brush;
 import com.nonme.actions.Dropper;
 import com.nonme.actions.Image;
-import com.nonme.actions.ImageMoved;
+import com.nonme.actions.Move;
+import com.nonme.actions.Select;
 import com.nonme.actions.Shape;
 import com.nonme.actions.Text;
 import com.nonme.drawandpaint.ActionLab;
@@ -125,10 +133,12 @@ public class PaintView extends View
         extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
+            Log.i(TAG, "Scaling");
+
             mScaleFactor *= detector.getScaleFactor();
             mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
             if(mCurrentToolType == Tools.IMAGE && mCurrentTool.getClass() == Image.class) {
-                ((ImageMoved) mCurrentTool).getImage().applyScale(mScaleFactor);
+                //((Image) mCurrentTool).getImage().applyScale(mScaleFactor);
                 Log.i(TAG, "SCaling");
                 invalidate();
             }
@@ -197,11 +207,17 @@ public class PaintView extends View
                 break;
             case MotionEvent.ACTION_MOVE:
                 actionMove(current);
-                draw();
+                if(mCurrentTool != null && mCurrentToolType == Tools.CURSOR)
+                    redraw();
+                else
+                    draw();
                 break;
             case MotionEvent.ACTION_UP:
                 actionUp(current);
-                updateDraw();
+                if(mCurrentTool != null && mCurrentToolType == Tools.CURSOR)
+                    redraw();
+                else
+                    updateDraw();
                 break;
         }
         return true;
@@ -214,6 +230,7 @@ public class PaintView extends View
                     InputMethodManager.HIDE_IMPLICIT_ONLY);
         switch(mCurrentToolType) {
             case Tools.BRUSH:
+                Log.i(TAG, "Brush");
                 mCurrentTool = new Brush(mCurrentColor, mBrushSize);
                 mActionLab.addAction(mCurrentTool);
                 Brush brush = (Brush) mCurrentTool;
@@ -221,42 +238,56 @@ public class PaintView extends View
                 brush.draw(current.x, current.y);
                 break;
             case Tools.DROPPER:
+                Log.i(TAG, "Dropper");
                 mCurrentColor = getBitmapImage().getPixel((int)current.x, (int) current.y);
                 break;
             case Tools.LINE:
+                Log.i(TAG, "Line");
                 mCurrentTool = new Shape(Shape.LINE, current, mCurrentColor);
                 mActionLab.addAction(mCurrentTool);
                 break;
             case Tools.RECTANGLE:
+                Log.i(TAG, "Rect");
                 mCurrentTool = new Shape(Shape.RECT, current, mCurrentColor);
                 mActionLab.addAction(mCurrentTool);
                 break;
             case Tools.OVAL:
+                Log.i(TAG, "Oval");
                 mCurrentTool = new Shape(Shape.OVAL, current, mCurrentColor);
                 mActionLab.addAction(mCurrentTool);
                 break;
-            case Tools.IMAGE:
-                mCurrentToolType = Tools.IMAGE_MOVED;
-                mCurrentTool = new ImageMoved(((Image) mCurrentTool),
-                        ((Image) mCurrentTool).getOrigin().x,
-                        ((Image) mCurrentTool).getOrigin().y);
-            case Tools.IMAGE_MOVED:
-                Log.i(TAG, "Image chosen");
-                float leftM = ((ImageMoved) mCurrentTool).getImage().getOrigin().x;
-                float topM = ((ImageMoved) mCurrentTool).getImage().getOrigin().y;
-                float rightM = ((ImageMoved)mCurrentTool).getImage().getImage().getWidth()+leftM;
-                float bottomM = ((ImageMoved) mCurrentTool).getImage().getImage().getHeight()+topM;
-
-                boolean isInImageM = (current.x >= leftM && current.x <= rightM &&
-                        current.y >= topM && current.y <= bottomM);
-                if(isInImageM) {
-                    mCurrentTool = new ImageMoved(((ImageMoved) mCurrentTool).getImage(),
-                            leftM,
-                            topM);
+            case Tools.CURSOR:
+                Log.i(TAG, "Cursor");
+                List<Action> actions = mActionLab.getDrawables();
+                Action lastSuitable = null;
+                for(Action action : actions) {
+                    if(action.getClass() == Image.class || action.getClass() == Text.class ||
+                            action.getClass() == Shape.class) {
+                        Rect bounds = new Rect();
+                        getActionBound(action, bounds);
+                        Log.i(TAG, current.x + " " + current.y + " " + bounds.left + " " +
+                                " " + bounds.right + " " + bounds.top + " " + bounds.bottom);
+                        if (current.x >= bounds.left && current.x <= bounds.right &&
+                                current.y >= bounds.top && current.y <= bounds.bottom) {
+                            lastSuitable = action;
+                        }
+                    }
+                }
+                if(lastSuitable == null)
+                    return;
+                else {
+                    Log.i(TAG, "Something selected..");
+                    Rect bounds = new Rect();
+                    getActionBound(lastSuitable, bounds);
+                    mCurrentTool = new Move(lastSuitable, bounds.left, bounds.top);
                     mActionLab.addAction(mCurrentTool);
-                    mImageRelatives = new PointF(current.x-leftM, current.y-topM);
+                    mImageRelatives = new PointF(current.x-bounds.left, current.y-bounds.top);
                     mIsMovingImage = true;
                 }
+                break;
+            case Tools.SELECT:
+                Log.i(TAG, "Select");
+                mCurrentTool = new Select(current.x, current.y);
                 break;
         }
         mCirclePath.addCircle(current.x, current.y, 50, Path.Direction.CW);
@@ -272,11 +303,14 @@ public class PaintView extends View
             case Tools.OVAL:
                 ((Shape) mCurrentTool).setEnd(current);
                 break;
-            case Tools.IMAGE_MOVED:
+            case Tools.CURSOR:
                 if(mIsMovingImage)
-                    ((ImageMoved) mCurrentTool).setDestination(new PointF(
+                    ((Move) mCurrentTool).setCurrent(new PointF(
                             current.x-mImageRelatives.x,
                             current.y-mImageRelatives.y));
+                break;
+            case Tools.SELECT:
+                ((Select) mCurrentTool).setEnd(new PointF(current.x, current.y));
                 break;
         }
         mCirclePath.reset();
@@ -304,12 +338,16 @@ public class PaintView extends View
             case Tools.OVAL:
                 ((Shape) mCurrentTool).setEnd(current);
                 break;
-            case Tools.IMAGE_MOVED:
+            case Tools.CURSOR:
                 if(mIsMovingImage)
-                    ((ImageMoved) mCurrentTool).setDestination(new PointF(
+                    ((Move) mCurrentTool).setCurrent(new PointF(
                             current.x-mImageRelatives.x,
                             current.y-mImageRelatives.y));
                 mIsMovingImage = false;
+                break;
+            case Tools.SELECT:
+                ((Select) mCurrentTool).setEnd(new PointF(current.x, current.y));
+                break;
         }
         mCirclePath.reset();
     }
@@ -321,7 +359,9 @@ public class PaintView extends View
         invalidate();
     }
     public void updateDraw() {
-        drawAction(mCanvas, mCurrentTool);
+        if(mCurrentTool != null)
+            drawAction(mCanvas, mCurrentTool);
+        invalidate();
     }
     @Override
     protected void onDraw(Canvas canvas) {
@@ -345,34 +385,78 @@ public class PaintView extends View
                 drawAction(canvas, action);
             }
         }
+        if(mCurrentTool != null && mCurrentToolType == Tools.SELECT) {
+            Log.i("PaintView", "Drawing mCurrentTool");
+            mPaint.setColor(Color.BLACK);
+            mPaint.setStrokeWidth(3);
+            PathEffect defaultPath = mPaint.getPathEffect();
+            mPaint.setPathEffect(new DashPathEffect(new float[] {10,20}, 0));
+            float left = ((Select) mCurrentTool).getOrigin().x;
+            float right = ((Select) mCurrentTool).getEnd().x;
+            float top = ((Select) mCurrentTool).getOrigin().y;
+            float bottom = ((Select) mCurrentTool).getEnd().y;
+            if (left > right) {
+                float temp = left;
+                left = right;
+                right = temp;
+            }
+            if (top > bottom) {
+                float temp = top;
+                top = bottom;
+                bottom = temp;
+            }
+            canvas.drawRect(left, top, right, bottom, mPaint);
+            mPaint.setPathEffect(defaultPath);
+        }
         canvas.drawPath(mCirclePath, mCirclePaint);
         mBitmapUpdated = true;
     }
     public void drawAction(Canvas canvas, Action action) {
-        if (action.getClass() == Brush.class) {
+        if(action.getClass() == Move.class) {
+            if(((Move) action).getAction().getClass() == Text.class) {
+                Text text = (Text) ((Move) action).getAction();
+                text.setOrigin(((Move) action).getCurrent());
+            }
+            if(((Move) action).getAction().getClass() == Image.class) {
+                Image text = (Image) ((Move) action).getAction();
+                text.setOrigin(((Move) action).getCurrent());
+            }
+            if(((Move) action).getAction().getClass() == Shape.class) {
+                Shape text = (Shape) ((Move) action).getAction();
+                text.setOrigin(((Move) action).getCurrent());
+            }
+        }
+        else if (action.getClass() == Brush.class) {
             mPaint.setColor(((Brush) action).getColor());
             mPaint.setStrokeWidth(((Brush) action).getBrushSize());
             canvas.drawPath((Brush) action, mPaint);
         } else if (action.getClass() == Text.class) {
             mTextPaint.setColor(((Text) action).getColor());
             mTextPaint.setTextSize(((Text) action).getFontSize());
-            if (action == mCurrentTool)
+            if (action == mCurrentTool) {
                 canvas.drawText(((Text) action).getText() + "|", ((Text) action).getOrigin().x,
-                        ((Text) action).getOrigin().y, mTextPaint);
-            else
+                  ((Text) action).getOrigin().y, mTextPaint);
+
+            }
+            else {
                 canvas.drawText(((Text) action).getText(), ((Text) action).getOrigin().x,
                         ((Text) action).getOrigin().y, mTextPaint);
+                Log.i("PaintView",""+((Text) action).getText() + " " + ((Text) action).getOrigin().x + " " +
+                        ((Text) action).getOrigin().y);
+            }
         } else if (action.getClass() == Image.class) {
             Bitmap image = ((Image) action).getImage();
             PointF position = ((Image) action).getOrigin();
             Rect source = new Rect((int)position.x, (int) position.y, image.getWidth(), image.getHeight());
             Rect dest = new Rect((int) position.x, (int) position.y, mDisplayWidth, mDisplayHeight);
-            canvas.drawBitmap(image, source, dest, mPaint);
-        } else if (action.getClass() == Shape.class) {
+            canvas.drawBitmap(image, ((Image) action).getOrigin().x,
+                    ((Image) action).getOrigin().y, mPaint);
+        }  else if (action.getClass() == Shape.class) {
             float left = ((Shape) action).getOrigin().x;
             float right = ((Shape) action).getEnd().x;
             float top = ((Shape) action).getOrigin().y;
             float bottom = ((Shape) action).getEnd().y;
+
             int color = ((Shape) action).getColor();
             mPaint.setColor(color);
             switch (((Shape) action).getType()) {
@@ -411,6 +495,9 @@ public class PaintView extends View
     public void setCurrentTool(int type) {
         mCurrentToolType = type;
     }
+    public Action getCurrentTool() {
+        return mCurrentTool;
+    }
     public void setCurrentColor(int color) {
         mCurrentColor = ContextCompat.getColor(getContext(), color);
         Log.i(TAG, String.valueOf(mCurrentColor));
@@ -434,7 +521,50 @@ public class PaintView extends View
         mIsMovingImage = false;
         redraw();
     }
-
+    public void pasteText(String text) {
+        Text newText = new Text(100, 100, R.font.lobster, mCurrentTextSize, mCurrentColor);
+        newText.setText(text);
+        mActionLab.addAction(newText);
+        draw();
+        Log.i("PaintView", "Pasted text successfully: " + text);
+    }
+    private void getActionBound(Action action, Rect bounds) {
+        int left, right, top, bottom;
+        if(action.getClass() == Text.class) {
+            left = (int) ((Text) action).getOrigin().x;
+            top = (int) ((Text) action).getOrigin().y;
+            mTextPaint.setTextSize(((Text) action).getFont());
+            right = left + (int) mTextPaint.measureText(((Text) action).getText());
+            Rect rect = new Rect();
+            mTextPaint.getTextBounds(((Text) action).getText(), 0,
+                    ((Text) action).getText().length(), rect);
+            bottom = top + rect.height();
+            bounds.left = left;
+            bounds.right = right;
+            bounds.bottom = bottom;
+            bounds.top = top;
+        }
+        if(action.getClass() == Image.class) {
+            left = (int) ((Image) action).getOrigin().x;
+            top = (int) ((Image) action).getOrigin().y;
+            right = left + ((Image) action).getImage().getWidth();
+            bottom = top + ((Image) action).getImage().getHeight();
+            bounds.left = left;
+            bounds.right = right;
+            bounds.bottom = bottom;
+            bounds.top = top;
+        }
+        if(action.getClass() == Shape.class) {
+            left = (int) ((Shape) action).getOrigin().x;
+            top = (int) ((Shape) action).getOrigin().y;
+            right = (int) ((Shape) action).getEnd().x;
+            bottom = (int) ((Shape) action).getEnd().y;
+            bounds.left = left;
+            bounds.right = right;
+            bounds.bottom = bottom;
+            bounds.top = top;
+        }
+    }
     public void clear() {
         mActionLab.clear();
         redraw();

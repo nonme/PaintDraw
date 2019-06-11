@@ -2,7 +2,8 @@ package com.nonme.actions;
 
 import android.graphics.PointF;
 
-public class Shape implements Action{
+public class Shape
+        implements Action{
     public static final int LINE = 0;
     public static final int RECT = 1;
     public static final int OVAL = 2;

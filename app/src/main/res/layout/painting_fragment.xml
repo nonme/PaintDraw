@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    class="com.nonme.drawandpaint.PaintingFragment"
+    class="com.nonme.fragments.PaintingFragment"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -9,48 +10,78 @@
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/tool_bar"
+        class="com.nonme.util.NotDelayedConstraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@color/primary_ui">
 
         <ImageButton
-            android:id="@+id/pen_button"
-            style="@style/Widget.AppCompat.ImageButton"
+            android:id="@+id/main_toolbar_first_button"
             android:layout_width="wrap_content"
             android:layout_height="45dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
             android:adjustViewBounds="true"
             android:backgroundTint="@color/white"
             android:cropToPadding="true"
             android:scaleType="fitCenter"
-            android:src="@drawable/pencil"
+            android:src="@drawable/cursor"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/dropper_button"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_second_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/dropper_button"
-            style="@style/Widget.AppCompat.ImageButton"
+            android:id="@+id/main_toolbar_second_button"
             android:layout_width="wrap_content"
             android:layout_height="45dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
             android:adjustViewBounds="true"
             android:backgroundTint="@color/white"
             android:cropToPadding="false"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/text_button"
-            app:layout_constraintStart_toEndOf="@+id/pen_button"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_third_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_first_button"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/dropper" />
+            app:srcCompat="@drawable/pencil" />
+
+        <com.nonme.util.SameValueSelectedSpinner
+            android:id="@+id/brush_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:drawable/btn_default"
+            android:backgroundTint="@color/white"
+            android:dropDownWidth="wrap_content"
+            android:dropDownSelector="@color/red"
+            android:foreground="@drawable/palette"
+            android:spinnerMode="dropdown"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_third_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_first_button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
 
         <ImageButton
-            android:id="@+id/text_button"
+            android:id="@+id/main_toolbar_third_button"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitCenter"
+            android:src="@drawable/crop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_fourth_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_second_button"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/main_toolbar_fourth_button"
             style="@style/Widget.AppCompat.ImageButton"
             android:layout_width="wrap_content"
             android:layout_height="45dp"
@@ -60,46 +91,49 @@
             android:backgroundTint="@color/white"
             android:scaleType="fitCenter"
             android:src="@drawable/text"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/eraser_button"
-            app:layout_constraintStart_toEndOf="@+id/dropper_button"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
-            android:id="@+id/eraser_button"
-            style="@style/Widget.AppCompat.ImageButton"
-            android:layout_width="50dp"
-            android:layout_height="45dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:backgroundTint="@color/white"
-            android:scaleType="fitCenter"
-            android:src="@drawable/eraser"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/shape_button"
-            app:layout_constraintStart_toEndOf="@+id/text_button"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_fifth_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_third_button"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/shape_button"
+            android:id="@+id/main_toolbar_fifth_button"
             style="@style/Widget.AppCompat.ImageButton"
-            android:layout_width="50dp"
+            android:layout_width="wrap_content"
             android:layout_height="45dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
             android:backgroundTint="@android:color/transparent"
             android:backgroundTintMode="add"
             android:scaleType="fitCenter"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/undo_button"
-            app:layout_constraintStart_toEndOf="@+id/eraser_button"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_sixth_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_fourth_button"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/hexagon" />
 
+        <com.nonme.util.SameValueSelectedSpinner
+            android:id="@+id/shapes_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:drawable/btn_default"
+            android:backgroundTint="@color/white"
+            android:dropDownWidth="wrap_content"
+            android:dropDownSelector="@color/red"
+            android:foreground="@drawable/palette"
+            android:spinnerMode="dropdown"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/main_toolbar_fourth_button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
         <ImageButton
-            android:id="@+id/undo_button"
+            android:id="@+id/main_toolbar_sixth_button"
             android:layout_width="wrap_content"
             android:layout_height="45dp"
             android:layout_marginTop="8dp"
@@ -108,13 +142,13 @@
             android:backgroundTint="@color/white"
             android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/redo_button"
-            app:layout_constraintStart_toEndOf="@+id/shape_button"
+            app:layout_constraintEnd_toStartOf="@+id/main_toolbar_seventh_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_fifth_button"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/undo" />
 
         <ImageButton
-            android:id="@+id/redo_button"
+            android:id="@+id/main_toolbar_seventh_button"
             android:layout_width="wrap_content"
             android:layout_height="45dp"
             android:layout_marginTop="8dp"
@@ -125,12 +159,13 @@
             android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/undo_button"
+            app:layout_constraintStart_toEndOf="@+id/main_toolbar_sixth_button"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/redo" />
 
     </android.support.constraint.ConstraintLayout>
     <FrameLayout
+        android:id="@+id/secondary_view"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_weight="6">
@@ -140,114 +175,120 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
     </FrameLayout>
-    <ViewAnimator
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/support_tool_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/view_animator">
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/support_tool_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@color/primary_ui"
-            tools:layout_editor_absoluteY="686dp">
+        android:layout_weight="1"
+        android:background="@color/primary_ui"
+        tools:layout_editor_absoluteY="686dp">
 
-            <ImageButton
-                android:id="@+id/brush_size"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:adjustViewBounds="true"
-                android:backgroundTint="@color/white"
-                android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/palette_button"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.466"
-                app:srcCompat="@drawable/brush_size" />
+        <ImageButton
+            android:id="@+id/first_tool_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466"
+            app:srcCompat="@drawable/palette" />
 
-            <ImageButton
-                android:id="@+id/palette_button"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:adjustViewBounds="true"
-                android:backgroundTint="@color/white"
-                android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.466"
-                app:srcCompat="@drawable/palette" />
+        <ImageButton
+            android:id="@+id/second_tool_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/first_tool_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466"
+            app:srcCompat="@drawable/brush_size" />
 
-            <ImageButton
-                android:id="@+id/save_button"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:adjustViewBounds="true"
-                android:backgroundTint="@color/white"
-                android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/maintenance_button"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.466"
-                app:srcCompat="@drawable/save" />
+        <ImageButton
+            android:id="@+id/third_tool_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/second_tool_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466"
+            app:srcCompat="@drawable/save" />
+        <ImageButton
+            android:id="@+id/fourth_tool_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/third_tool_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466"
+            app:srcCompat="@drawable/save" />
 
-            <ImageButton
-                android:id="@+id/maintenance_button"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:adjustViewBounds="true"
-                android:backgroundTint="@color/white"
-                android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/maintenance" />
+        <ImageButton
+            android:id="@+id/layers_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:backgroundTint="@color/white"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/layers" />
+        <com.nonme.util.SameValueSelectedSpinner
+            android:id="@+id/layers_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:drawable/btn_default"
+            android:backgroundTint="@color/white"
+            android:dropDownWidth="wrap_content"
+            android:dropDownSelector="@color/red"
+            android:foreground="@drawable/palette"
+            android:spinnerMode="dropdown"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
 
-            <com.nonme.util.SameValueSelectedSpinner
-                android:id="@+id/palette_spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginStart="8dp"
-                android:background="@android:drawable/btn_default"
-                android:backgroundTint="@color/white"
-                android:dropDownWidth="wrap_content"
-                android:dropDownSelector="@color/red"
-                android:foreground="@drawable/palette"
-                android:spinnerMode="dropdown"
-                android:visibility="invisible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:visibility="gone" />
+        <com.nonme.util.SameValueSelectedSpinner
+            android:id="@+id/palette_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:drawable/btn_default"
+            android:backgroundTint="@color/white"
+            android:dropDownWidth="wrap_content"
+            android:dropDownSelector="@color/red"
+            android:foreground="@drawable/palette"
+            android:spinnerMode="dropdown"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
         </android.support.constraint.ConstraintLayout>
-        <android.support.constraint.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageButton
-                android:id="@id/maintenance_button"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:adjustViewBounds="true"
-                android:backgroundTint="@color/white"
-                android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/maintenance" />
-        </android.support.constraint.ConstraintLayout>
-    </ViewAnimator>
 </LinearLayout>

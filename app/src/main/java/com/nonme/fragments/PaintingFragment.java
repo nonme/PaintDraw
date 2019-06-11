@@ -1,27 +1,37 @@
 package com.nonme.fragments;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.solver.widgets.Rectangle;
 import android.support.v4.app.DialogFragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 
+import com.nonme.actions.Action;
+import com.nonme.actions.Select;
 import com.nonme.drawandpaint.ActionLab;
 import com.nonme.drawandpaint.R;
 import com.nonme.drawandpaint.ToolSwitcher;
@@ -39,119 +49,102 @@ import java.util.Calendar;
 
 public class PaintingFragment extends android.support.v4.app.Fragment {
     private static final int SELECT_IMAGE = 0;
-    private com.nonme.util.NotDelayedImageButton mBrushButton;
-    private com.nonme.util.NotDelayedImageButton mDropperButton;
-    private com.nonme.util.NotDelayedImageButton mTextBoxButton;
-    private ImageButton mEraserButton;
-    private ImageButton mUndoButton;
-    private ImageButton mRedoButon;
-    private ImageButton mShapeButton;
+    private ImageButton mMainToolbarFirstButton;
+    private ImageButton mMainToolbarSecondButton;
+    private ImageButton mMainToolbarThirdButton;
+    private ImageButton mMainToolbarFourthButton;
+    private ImageButton mMainToolbarFifthButton;
+    private ImageButton mMainToolbarSixthButton;
+    private ImageButton mMainToolbarSeventhButton;
 
     private ImageButton mFirstToolButton;
     private ImageButton mSecondToolButton;
     private ImageButton mThirdToolButton;
     private ImageButton mFourthToolButton;
+    private ImageButton mLayersButton;
 
     private SameValueSelectedSpinner mPaletteSpinner;
     private SameValueSelectedSpinner mShapesSpinner;
+    private SameValueSelectedSpinner mBrushSpinner;
+    private SameValueSelectedSpinner mLayersSpinner;
 
     private ActionLab mActionLab;
     private PaintView mPaintView;
     private View mSupportToolBar;
 
     private ToolSwitcher mToolSwitcher;
+    private boolean mDataLoaded;
 
     private Integer[] mColors = new Integer[] {
-        R.color.red, R.color.yellow, R.color.green, R.color.blue,
+                R.color.white, R.color.red, R.color.yellow, R.color.green, R.color.blue,
                 R.color.purple, R.color.maroon, R.color.gray, R.color.black};
     private Integer[] mShapes = new Integer[] {
             R.drawable.line, R.drawable.rectangle, R.drawable.circle };
+    private Integer[] mBrushes = new Integer[] {
+            R.drawable.pencil, R.drawable.dropper, R.drawable.eraser, R.drawable.fill };
+    private String[] mLayers = new String[] {
+            "First Layer", "Second Layer", "Third Layer" };
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mDataLoaded = false;
     }
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.painting_fragment, container, false);
-        mToolSwitcher = new ToolSwitcher();
-        setToolButtons(v);
         mPaintView = v.findViewById(R.id.painting_fragment);
         mPaintView.setCurrentTool(PaintView.BRUSH);
         mActionLab = ActionLab.get();
+        mActionLab.setCurrentLayer(0);
         v.setFocusable(true);
         v.setFocusableInTouchMode(true);
+
+        mToolSwitcher = new ToolSwitcher();
+        setToolButtons(v);
+        registerMainToolbar();
+        setBrushToolBar();
+        setToolSpinners(v);
+        mPaintView.setCurrentTool(Tools.BRUSH);
+        mPaintView.setCurrentColor(R.color.black);
         return v;
     }
     private void setToolButtons(View v) {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int height = displayMetrics.heightPixels;
-        int width = displayMetrics.widthPixels;
-        int size = width;
-
-        mBrushButton = (com.nonme.util.NotDelayedImageButton) v.findViewById(R.id.pen_button);
-        mBrushButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPaintView.setCurrentTool(PaintView.BRUSH);
-                setBrushToolBar();
-                Log.i("PaintingFragment", "Button clicked");
-            }
+        mMainToolbarFirstButton = v.findViewById(R.id.main_toolbar_first_button);
+        mMainToolbarFirstButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_FIRST);
+        });
+        mMainToolbarSecondButton = v.findViewById(R.id.main_toolbar_second_button);
+        mMainToolbarSecondButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_SECOND);
+        });
+        mMainToolbarThirdButton = v.findViewById(R.id.main_toolbar_third_button);
+        mMainToolbarThirdButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_THIRD);
+        });
+        mMainToolbarFourthButton = v.findViewById(R.id.main_toolbar_fourth_button);
+        mMainToolbarFourthButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_FOURTH);
+        });
+        mMainToolbarFifthButton = v.findViewById(R.id.main_toolbar_fifth_button);
+        mMainToolbarFifthButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_FIFTH);
+        });
+        mMainToolbarSixthButton = v.findViewById(R.id.main_toolbar_sixth_button);
+        mMainToolbarSixthButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_SIXTH);
+        });
+        mMainToolbarSeventhButton = v.findViewById(R.id.main_toolbar_seventh_button);
+        mMainToolbarSeventhButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.MAIN_SEVENTH);
         });
 
-        mDropperButton = (com.nonme.util.NotDelayedImageButton) v.findViewById(R.id.dropper_button);
-        mDropperButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPaintView.setCurrentTool(PaintView.DROPPER);
-                setDropperToolBar();
-            }
-        });
-
-        mEraserButton = (ImageButton) v.findViewById(R.id.eraser_button);
-        mEraserButton.setOnClickListener(view -> {
-            mPaintView.clear();
-        });
-        mTextBoxButton = (com.nonme.util.NotDelayedImageButton) v.findViewById(R.id.text_button);
-        mTextBoxButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPaintView.setCurrentTool(Tools.TEXT);
-                setTextToolBar();
-            }
-        });
-
-        mShapeButton = (ImageButton) v.findViewById(R.id.shape_button);
-        mShapeButton.setOnClickListener(view -> {
-            setShapeToolBar();
-            mShapeButton.post(() ->
-                    mShapesSpinner.performClick());
-        });
-
-        mUndoButton = setButton(R.id.undo_button, size, v);
-        mUndoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mActionLab.undoAction();
-                mPaintView.invalidate();
-            }
-        });
-
-        mRedoButon = setButton(R.id.redo_button, size, v);
-        mRedoButon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mActionLab.redoAction();
-                mPaintView.invalidate();
-            }
-        });
         mFirstToolButton = v.findViewById(R.id.first_tool_button);
         mSecondToolButton = v.findViewById(R.id.second_tool_button);
         mThirdToolButton = v.findViewById(R.id.third_tool_button);
         mFourthToolButton = v.findViewById(R.id.fourth_tool_button);
-        setBrushToolBar();
+        mLayersButton = v.findViewById(R.id.layers_button);
 
         mFirstToolButton.setOnClickListener(view -> {
             mToolSwitcher.execute(Tools.FIRST_BUTTON);
@@ -165,8 +158,58 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         mFourthToolButton.setOnClickListener(view -> {
             mToolSwitcher.execute(Tools.FOURTH_BUTTON);
         });
-        mSupportToolBar = (View) v.findViewById(R.id.support_tool_bar);
+        mLayersButton = v.findViewById(R.id.layers_button);
+        mLayersButton.setOnClickListener(view -> {
+            mToolSwitcher.execute(Tools.LAYERS_BUTTON);
+        });
+        mToolSwitcher.register(Tools.LAYERS_BUTTON, () -> {
+            mDataLoaded = true;
+            mLayersSpinner.performClick();
+        });
+    }
+    private void registerMainToolbar() {
+        //First button responds for hand-cursor, allows to move objects and scale images
+        mToolSwitcher.register( Tools.MAIN_FIRST, () -> {
+            mPaintView.setCurrentTool(Tools.CURSOR);
+        });
+        //Second button responds for brush spinner, allows to select brush, eraser and paint bucket
+        mToolSwitcher.register( Tools.MAIN_SECOND, () -> {
+            mPaintView.setCurrentTool(PaintView.BRUSH);
+            setBrushToolBar();
+            mDataLoaded = true;
+            mMainToolbarSecondButton.post(() ->
+                    mBrushSpinner.performClick());
+        });
+        //Third button responds for cropping images and selecting area to copy/cut
+        mToolSwitcher.register( Tools.MAIN_THIRD, () -> {
+            mPaintView.setCurrentTool(Tools.SELECT);
+            //TODO
+        });
+        //Fourth button responds for text
+        mToolSwitcher.register( Tools.MAIN_FOURTH, () -> {
+            mPaintView.setCurrentTool(Tools.TEXT);
+            setTextToolBar();
+        });
+        //Fifth button responds for shapes
+        mToolSwitcher.register( Tools.MAIN_FIFTH, () -> {
+            setShapeToolBar();
+            mDataLoaded = true;
+            mMainToolbarSeventhButton.post(() ->
+                    mShapesSpinner.performClick());
+        });
+        //Sixth button is undo
+        mToolSwitcher.register( Tools.MAIN_SIXTH, () -> {
+            mActionLab.undoAction();
+            mPaintView.redraw();
+        });
+        //Seventh button is redo
+        mToolSwitcher.register( Tools.MAIN_SEVENTH, () -> {
+            mActionLab.redoAction();
+            mPaintView.redraw();
+        });
 
+    }
+    private void setToolSpinners(View v) {
         mPaletteSpinner = (SameValueSelectedSpinner) v.findViewById(R.id.palette_spinner);
         ColorArrayAdapter brushAdapter = new ColorArrayAdapter(getContext(), mColors);
         mPaletteSpinner.setAdapter(brushAdapter);
@@ -175,6 +218,8 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         mPaletteSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(!mDataLoaded)
+                    return;
                 if(PaintingFragment.this.mPaletteSpinner.getSelectedItem() != null) {
                     int itemPosition = PaintingFragment.this.mPaletteSpinner.getSelectedItemPosition();
                     mPaintView.setCurrentColor(mColors[itemPosition]);
@@ -190,23 +235,86 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         mShapesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(!mDataLoaded)
+                    return;
                 if(mShapesSpinner.getSelectedItem() != null) {
                     int itemPosition = mShapesSpinner.getSelectedItemPosition();
                     mPaintView.setCurrentTool(Tools.LINE+itemPosition);
                 }
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
 
-    }
+        mBrushSpinner = (SameValueSelectedSpinner) v.findViewById(R.id.brush_spinner);
+        ColorArrayAdapter brushSpinnerAdapter = new ColorArrayAdapter(getContext(), mBrushes);
+        mBrushSpinner.setAdapter(brushSpinnerAdapter);
+        mBrushSpinner.setDropDownVerticalOffset(90);
+        mBrushSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(!mDataLoaded)
+                    return;
+                if(mBrushSpinner.getSelectedItem() != null) {
+                    int itemPosition = mBrushSpinner.getSelectedItemPosition();
+                    switch(itemPosition){
+                        case Tools.BRUSH:
+                            mPaintView.setCurrentTool(Tools.BRUSH);
+                            setBrushToolBar();
+                            break;
+                        case Tools.DROPPER:
+                            mPaintView.setCurrentTool(Tools.DROPPER);
+                            setDropperToolBar();
+                            break;
+                        case Tools.ERASER:
+                            mPaintView.setCurrentTool(Tools.ERASER);
+                            //setEraserToolBar();
+                            //TODO
+                            break;
+                        case Tools.BUCKET:
+                            mPaintView.setCurrentTool(Tools.BUCKET);
+                            //TODO
+                            break;
+                    }
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
 
+            }
+        });
+        mLayersSpinner = v.findViewById(R.id.layers_spinner);
+        ArrayAdapter<String> layersAdapter = new ArrayAdapter<String>(
+                getContext(), R.layout.support_simple_spinner_dropdown_item, mLayers);
+        layersAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        mLayersSpinner.setAdapter(layersAdapter);
+        mLayersSpinner.setDropDownVerticalOffset(90);
+        mLayersSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(!mDataLoaded)
+                    return;
+                if(mLayersSpinner.getSelectedItem() != null) {
+                    int itemPosition = mLayersSpinner.getSelectedItemPosition();
+                    mPaintView.setCurrentTool(Tools.BRUSH);
+                    mActionLab.setCurrentLayer(itemPosition);
+                    mPaintView.redraw();
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    }
     private void setBrushToolBar() {
         mToolSwitcher.register( Tools.FIRST_BUTTON,
-                () -> mPaletteSpinner.performClick());
+                () -> {
+                    mDataLoaded = true;
+                    mPaletteSpinner.performClick();
+        });
         mToolSwitcher.register( Tools.SECOND_BUTTON,
                 () -> new BrushSizePickerFragment()
                         .show(getActivity().getSupportFragmentManager(),
@@ -225,8 +333,10 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         mFourthToolButton.setVisibility(ImageButton.GONE);
     }
     private void setTextToolBar() {
-        mToolSwitcher.register( Tools.FIRST_BUTTON,
-                () -> mPaletteSpinner.performClick());
+        mToolSwitcher.register( Tools.FIRST_BUTTON, () -> {
+            mDataLoaded = true;
+            mPaletteSpinner.performClick();
+        });
         mToolSwitcher.register( Tools.SECOND_BUTTON,
                 () -> Toast.makeText(getContext(),
                         "Sorry, this feature is not available yet.",
@@ -287,8 +397,10 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
                 .format(Calendar.getInstance().getTimeInMillis());
         String imageName = "paint_" + timeStamp + ".jpg";
+        save(mPaintView.getBitmapImage(), imageName);
+    }
+    public void save(Bitmap bitmap, String imageName) {
         if(isExternalStorageWritable()) {
-            Bitmap bitmap = mPaintView.getBitmapImage();
             String externalDirectory = Environment.getExternalStorageDirectory().toString();
             File sdCard = new File(externalDirectory + "/PaintDraw");
             sdCard.mkdir();
@@ -312,6 +424,10 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
                     .show();
         }
     }
+    public void saveAsCopy(Bitmap bitmap) {
+        String name = "copy.jpg";
+        save(bitmap, name);
+    }
     public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -319,6 +435,7 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
         }
         return false;
     }
+    //TODO
     public File getPublicAlbumStorageDir(String albumName) {
         // Get the directory for the user's public pictures directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(
@@ -355,6 +472,7 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(),
                                 data.getData());
                         Log.i("PaintingFragment", "got image");
+                        mPaintView.setCurrentTool(Tools.IMAGE);
                         mPaintView.openImage(bitmap);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
@@ -368,11 +486,81 @@ public class PaintingFragment extends android.support.v4.app.Fragment {
             }
         }
     }
-
     public void about() {
         Toast.makeText(getContext(),
                 "by Dmitry Larin",
                 Toast.LENGTH_LONG)
                 .show();
+    }
+    public void copy() {
+        Action selected = mPaintView.getCurrentTool();
+        Bitmap bitmap = mPaintView.getBitmapImage();
+        if(selected != null && selected.getClass() == Select.class) {
+            Select select = (Select) selected;
+            int x = (int) Math.min(select.getOrigin().x, select.getEnd().x);
+            int y = (int) Math.min(select.getOrigin().y, select.getEnd().y);
+            int width = (int) Math.abs(select.getOrigin().x-select.getEnd().x);
+            int height = (int) Math.abs(select.getOrigin().y-select.getEnd().y);
+            bitmap.setConfig(Bitmap.Config.ARGB_8888);
+            Bitmap cloneBitmap = Bitmap.createBitmap(bitmap, x+3, y+3,
+                    width-6, height-6);
+            cloneBitmap.setConfig(Bitmap.Config.ARGB_8888);
+            saveAsCopy(cloneBitmap);
+        }
+        else
+            saveAsCopy(bitmap);
+        String externalDirectory = Environment.getExternalStorageDirectory().toString();
+        String sdCard = externalDirectory + "/PaintDraw";
+        Uri copyUri = Uri.parse(sdCard + "/copy.jpg");
+        ClipData clip = ClipData.newUri(getActivity().getContentResolver(), "URI", copyUri);
+        ClipboardManager clipboardManager = (ClipboardManager)
+                getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        clipboardManager.setPrimaryClip(clip);
+    }
+    public void paste() {
+        Log.i("PaintingFragment", "Pasting..");
+        ClipboardManager clipboardManager = (ClipboardManager)
+                getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
+        String pasteData = (String) item.getText();
+        if(pasteData != null) {
+            mPaintView.pasteText(pasteData);
+        } else {
+            Log.i("PaintingFragment", "Pasting image!");
+            String externalDirectory = Environment.getExternalStorageDirectory().toString();
+            File imgFile = new File(externalDirectory + "/PaintDraw/copy.jpg");
+            if(imgFile.exists()) {
+                Log.i("PaintingFragment", "got image");
+                Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                mPaintView.setCurrentTool(Tools.IMAGE);
+                mPaintView.openImage(bitmap);
+            }
+        }
+    }
+    private Bitmap resolveUri(Uri uri) {
+        ClipboardManager clipboardManager = (ClipboardManager)
+                getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        ContentResolver cr = getActivity().getContentResolver();
+        ClipData clip = clipboardManager.getPrimaryClip();
+        if(clip != null) {
+            ClipData.Item item = clip.getItemAt(0);
+            Uri pasteUri = item.getUri();
+            if(pasteUri != null) {
+                String mimeType = cr.getType(pasteUri);
+                if(mimeType != null) {
+                    if(mimeType.contains("image/")) {
+                        Uri imageUri = getActivity().getIntent().getData();
+                        try {
+                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(
+                                    cr, pasteUri);
+                            return bitmap;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

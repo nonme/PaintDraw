@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/open_button"
+        android:icon="@drawable/open"
+        android:title="Open" />
+    <item
+        android:id="@+id/save_button"
+        android:icon="@drawable/save"
+        android:title="Save" />
+    <item
+        android:id="@+id/copy_button"
+        android:title="Copy" />
+    <item
+        android:id="@+id/paste_button"
+        android:title="Paste" />
+    <item
+        android:id="@+id/about_button"
+        android:icon="@drawable/main_icon2"
+        android:title="About" />
+</menu>

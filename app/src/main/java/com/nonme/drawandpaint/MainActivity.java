@@ -1,6 +1,8 @@
 package com.nonme.drawandpaint;
 
 import android.Manifest;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
@@ -61,6 +63,16 @@ public class MainActivity extends AppCompatActivity
                 return true;
             case R.id.about_button:
                 mPaintingFragment.about();
+                return true;
+            case R.id.copy_button:
+                mPaintingFragment.copy();
+                return true;
+            case R.id.paste_button:
+                ClipboardManager clipboardManager = (ClipboardManager)
+                        getSystemService(Context.CLIPBOARD_SERVICE);
+                if(!clipboardManager.hasPrimaryClip())
+                    return true;
+                mPaintingFragment.paste();
                 return true;
         }
         return super.onOptionsItemSelected(item);

@@ -1,13 +1,15 @@
 package com.nonme.drawandpaint;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.nonme.actions.Action;
 
 public class ActionLab {
-    private List<Action> mActions;
-    private int mCurrentAction;
+    private ArrayList<List<Action> > mActions;
+    private ArrayList<Integer> mCurrentAction;
+    private int mCurrentLayer;
     private static ActionLab sActionLab;
     public static ActionLab get() {
         if(sActionLab == null)
@@ -15,37 +17,49 @@ public class ActionLab {
         return sActionLab;
     }
     private ActionLab() {
-        mCurrentAction = -1;
-        mActions = new LinkedList<>();
+        mCurrentAction = new ArrayList<>();
+        for(int i = 0; i < 3; ++i)
+            mCurrentAction.add(-1);
+        mCurrentLayer = 0;
+        mActions = new ArrayList<>();
+        for(int i = 0; i < 3; ++i)
+            mActions.add(new LinkedList<>());
     }
     public void addAction(Action action) {
-        for(int i = mCurrentAction+1; i < mActions.size(); ) {
-            mActions.remove(i);
+        for(int i = mCurrentAction.get(mCurrentLayer)+1; i < mActions.get(mCurrentLayer).size(); ) {
+            mActions.get(mCurrentLayer).remove(i);
         }
-        mActions.add(action);
-        mCurrentAction++;
+        mActions.get(mCurrentLayer).add(action);
+        mCurrentAction.set(mCurrentLayer, mCurrentAction.get(mCurrentLayer)+1);
     }
     public void redoAction() {
-        if(mCurrentAction == mActions.size()-1)
+        if(mCurrentAction.get(mCurrentLayer) == mActions.get(mCurrentLayer).size()-1)
             return;
-        mCurrentAction++;
-        mActions.get(mCurrentAction).redo();
+        mCurrentAction.set(mCurrentLayer, mCurrentAction.get(mCurrentLayer)+1);
+        mActions.get(mCurrentLayer).get(mCurrentAction.get(mCurrentLayer)).redo();
     }
     public void undoAction() {
-        if(mCurrentAction == -1)
+        if(mCurrentAction.get(mCurrentLayer) == -1)
             return;
-        mActions.get(mCurrentAction).undo();
-        mCurrentAction--;
+        mActions.get(mCurrentLayer).get(mCurrentAction.get(mCurrentLayer)).undo();
+        mCurrentAction.set(mCurrentLayer, mCurrentAction.get(mCurrentLayer)-1);
     }
     public List<Action> getDrawables() {
-        return mActions;
+        return mActions.get(mCurrentLayer);
+    }
+    public Action getLastDrawable() {
+        if(!mActions.get(mCurrentLayer).isEmpty())
+            return mActions.get(mCurrentLayer).get(mActions.get(mCurrentLayer).size()-1);
+        else return null;
     }
     public int getCurrentAction() {
-        return mCurrentAction;
+        return mCurrentAction.get(mCurrentLayer);
     }
-
+    public void setCurrentLayer(int layer) {
+        mCurrentLayer = layer;
+    }
     public void clear() {
         mActions.clear();
-        mCurrentAction = -1;
+        mCurrentAction.set(mCurrentLayer, -1);
     }
 }

@@ -9,5 +9,6 @@
         android:background="@color/aqua"
         android:layout_height="20dp"
         android:layout_width="20dp"
+        android:adjustViewBounds="true"
         android:padding="5dp"/>
 </android.support.constraint.ConstraintLayout>

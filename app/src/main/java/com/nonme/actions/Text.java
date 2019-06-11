@@ -4,7 +4,8 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
 
-public class Text implements Action {
+public class Text
+        implements Action {
     private String mText;
     private int mColor;
     private int mFont;
